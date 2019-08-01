@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# Migrate data from the classic snap
+if [ -f "$SNAP_USER_COMMON/.config/skypeforlinux/settings.json" ] && [ ! -f "$SNAP_USER_DATA/.config/skypeforlinux/settings.json" ]; then
+  cp -a "$SNAP_USER_COMMON/.config/skypeforlinux" "$SNAP_USER_DATA/.config/skypeforlinux"
+  mv "$SNAP_USER_COMMON/.config/skypeforlinux" "$SNAP_USER_COMMON/.config/skypeforlinux-migrated"
+fi
+
+export SKYPE_LOGS="$HOME/.config/skypeforlinux/logs"
+mkdir -p $SKYPE_LOGS
+exec ${SNAP}/bin/snapcraft-preload ${SNAP}/usr/share/skypeforlinux/skypeforlinux --executed-from="$(pwd)" --pid=$$
+#exec ${SNAP}/usr/share/skypeforlinux/skypeforlinux --executed-from="$(pwd)" --pid=$$
