@@ -95,10 +95,10 @@ int mkstemp64(char *path_template)
 
 int open(const char *pathname, int flags, ...)
 {
+    mode_t mode = 0;
+
     va_list args;
     va_start(args, flags);
-
-    mode_t mode = 0;
 
     if (flags & (O_CREAT | O_TMPFILE)) {
         mode = va_arg(args, mode_t);
