@@ -1,5 +1,5 @@
 name: skype
-version: 64-preview
+version: strict-v8.51.76.61
 summary: Skype
 description: Skype keeps the world talking, for free.
     Skype keeps you together. Call, message and share with others.
@@ -29,6 +29,9 @@ plugs:
     interface: content
     target: $SNAP/data-dir/sounds
     default-provider: gtk-common-themes
+  browser-sandbox:
+    interface: browser-support
+    allow-sandbox: true
 
 parts:
     snapcraft-desktop-helpers:
@@ -45,7 +48,7 @@ parts:
 
     skype:
         plugin: dump
-        source: https://go.skype.com/skypeforlinux-64-preview.deb
+        source: https://repo.skype.com/deb/pool/main/s/skypeforlinux/skypeforlinux_8.51.76.61_amd64.deb
         after:
             - snapcraft-desktop-helpers
         stage-packages:
@@ -59,11 +62,14 @@ parts:
             - libappindicator3-1
         override-build: |
             snapcraftctl build
+            # String hacks below not required with browser-support.
             #sed -i 's|.org.chromium.Chromium.XXXXXX|snap.skype.xx.Chromium.XXXXXX|g' $SNAPCRAFT_PART_INSTALL/usr/share/skypeforlinux/skypeforlinux
+            #sed -i 's|org.chromium.Chromium.shmem|snap.skype.x.Chromium.shmem|g' $SNAPCRAFT_PART_INSTALL/usr/share/skypeforlinux/skypeforlinux
         prime:
             - -usr/share/lintian
             - -usr/share/man
             - -opt
+            #- -usr/share/skypeforlinux/chrome-sandbox
 
     skype-wrapper:
         plugin: dump

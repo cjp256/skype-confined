@@ -45,6 +45,33 @@
         do {} while (0)
 #endif
 
+
+/*
+ *  If using browser-support plug or the binary string swap,
+ *  this redirect is not necessary.
+ */
+#ifdef PRELOAD_MKSTEMP64
+int mkstemp64(char *path_template)
+{
+    static int (*real_mkstemp64)(char *) = NULL;
+    if (!real_mkstemp64) {
+        real_mkstemp64 = (int (*)(char *))dlsym(RTLD_NEXT, "mkstemp64");
+    }
+
+    const char *from = "/dev/shm/.org.chromium.Chromium.XXXXXX";
+    const char *to = "/dev/shm/snap.skype.xx.Chromium.XXXXXX";
+
+    if (strcmp(path_template, from) == 0) {
+        strncpy(path_template, to, strlen(from) + 1);
+    }
+
+    debug_print("[pre-call] path=%s\n", path_template);
+    int result = real_mkstemp64(path_template);
+    debug_print("[post-call] path=%s ret=0x%x\n", path_template, result);
+    return result;
+}
+#endif //PRELOAD_MKSTEMP64
+
 static char *
 redirect_shm(const char *pathname)
 {
@@ -71,26 +98,6 @@ redirect_shm(const char *pathname)
 
     snprintf(redirected_path, max_len, "%s%s", to, remainder);
     return redirected_path;
-}
-
-int mkstemp64(char *path_template)
-{
-    static int (*real_mkstemp64)(char *) = NULL;
-    if (!real_mkstemp64) {
-        real_mkstemp64 = (int (*)(char *))dlsym(RTLD_NEXT, "mkstemp64");
-    }
-
-    const char *from = "/dev/shm/.org.chromium.Chromium.XXXXXX";
-    const char *to = "/dev/shm/snap.skype.xx.Chromium.XXXXXX";
-
-    if (strcmp(path_template, from) == 0) {
-        strncpy(path_template, to, strlen(from) + 1);
-    }
-
-    debug_print("[pre-call] path=%s\n", path_template);
-    int result = real_mkstemp64(path_template);
-    debug_print("[post-call] path=%s ret=0x%x\n", path_template, result);
-    return result;
 }
 
 int open(const char *pathname, int flags, ...)

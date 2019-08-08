@@ -1,4 +1,8 @@
-#!/usr/bin/env bash
+#!/bin/sh -x
+
+SCRIPT=$(readlink -f "$0")
+USR_DIRECTORY=$(readlink -f $(dirname $SCRIPT)/../usr)
+SKYPE_PATH="$USR_DIRECTORY/share/skypeforlinux/skypeforlinux"
 
 # Migrate data from the classic snap
 if [ -f "$SNAP_USER_COMMON/.config/skypeforlinux/settings.json" ] && [ ! -f "$SNAP_USER_DATA/.config/skypeforlinux/settings.json" ]; then
@@ -8,5 +12,4 @@ fi
 
 export SKYPE_LOGS="$HOME/.config/skypeforlinux/logs"
 mkdir -p $SKYPE_LOGS
-exec ${SNAP}/bin/snapcraft-preload ${SNAP}/usr/share/skypeforlinux/skypeforlinux --executed-from="$(pwd)" --pid=$$
-#exec ${SNAP}/usr/share/skypeforlinux/skypeforlinux --executed-from="$(pwd)" --pid=$$
+exec ${SNAP}/bin/snapcraft-preload ${SNAP}/usr/share/skypeforlinux/skypeforlinux --executed-from="$(pwd)" --pid=$$ $@
