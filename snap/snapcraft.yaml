@@ -1,5 +1,5 @@
 name: skype
-version: strict-v8.51.76.61
+version: 8.63.76.77
 summary: Skype
 description: Skype keeps the world talking, for free.
     Skype keeps you together. Call, message and share with others.
@@ -13,44 +13,14 @@ confinement: strict
 base: core18
 
 plugs:
-  gnome-3-28-1804:
-    interface: content
-    target: $SNAP/gnome-platform
-    default-provider: gnome-3-28-1804
-  gtk-3-themes:
-    interface: content
-    target: $SNAP/data-dir/themes
-    default-provider: gtk-common-themes
-  icon-themes:
-    interface: content
-    target: $SNAP/data-dir/icons
-    default-provider: gtk-common-themes
-  sound-themes:
-    interface: content
-    target: $SNAP/data-dir/sounds
-    default-provider: gtk-common-themes
   browser-sandbox:
     interface: browser-support
     allow-sandbox: true
 
 parts:
-    snapcraft-desktop-helpers:
-        source: git://github.com/ubuntu/snapcraft-desktop-helpers.git
-        source-subdir: gtk
-        plugin: make
-        make-parameters: ["FLAVOR=gtk3"]
-        build-packages:
-        - build-essential
-        - libgtk-3-dev
-        override-build: |
-          snapcraftctl build
-          mkdir -pv $SNAPCRAFT_PART_INSTALL/gnome-platform
-
     skype:
         plugin: dump
-        source: https://repo.skype.com/deb/pool/main/s/skypeforlinux/skypeforlinux_8.51.76.61_amd64.deb
-        after:
-            - snapcraft-desktop-helpers
+        source: https://repo.skype.com/deb/pool/main/s/skypeforlinux/skypeforlinux_8.63.76.77_amd64.deb
         stage-packages:
             - libasound2
             - libgconf-2-4
@@ -60,16 +30,11 @@ parts:
             - libv4l-0
             - libxss1
             - libappindicator3-1
-        override-build: |
-            snapcraftctl build
-            # String hacks below not required with browser-support.
-            #sed -i 's|.org.chromium.Chromium.XXXXXX|snap.skype.xx.Chromium.XXXXXX|g' $SNAPCRAFT_PART_INSTALL/usr/share/skypeforlinux/skypeforlinux
-            #sed -i 's|org.chromium.Chromium.shmem|snap.skype.x.Chromium.shmem|g' $SNAPCRAFT_PART_INSTALL/usr/share/skypeforlinux/skypeforlinux
+            - libsecret-1-0
         prime:
             - -usr/share/lintian
             - -usr/share/man
             - -opt
-            #- -usr/share/skypeforlinux/chrome-sandbox
 
     skype-wrapper:
         plugin: dump
@@ -77,18 +42,16 @@ parts:
         organize:
             'skype-wrapper': bin/
 
-    skype-shm-preloader:
-        plugin: cmake
-        source: shm-preloader
-        build-packages:
-            - on amd64:
-                - gcc-multilib
-                - g++-multilib
+    preloads:
+      source: https://github.com/snapcore/snapcraft-preloads.git
+      source-branch: fixes
+      plugin: make
 
 apps:
     skype:
         autostart: skypeforlinux.desktop
-        command: bin/desktop-launch ${SNAP}/bin/skype-wrapper
+        command-chain: [bin/skype-wrapper]
+        command: usr/share/skypeforlinux/skypeforlinux
         environment:
             # Correct the TMPDIR path for Chromium Framework/Electron to
             # ensure libappindicator has readable resources
@@ -99,6 +62,9 @@ apps:
             XDG_CURRENT_DESKTOP: Unity
             # Fallback to XWayland if running in a Wayland session.
             DISABLE_WAYLAND: 1
+            LD_PRELOAD: $SNAP/libpreload-bindtextdomain.so:$SNAP/libpreload-chromium-content-api.so:$SNAP/libpreload-semaphores.so
+            SHM_CHROMIUM_DEBUG: 1
+        extensions: [gnome-3-28]
         plugs:
             - bluez
             - browser-support

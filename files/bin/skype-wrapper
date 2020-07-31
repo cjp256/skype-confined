@@ -12,4 +12,5 @@ fi
 
 export SKYPE_LOGS="$HOME/.config/skypeforlinux/logs"
 mkdir -p $SKYPE_LOGS
-exec ${SNAP}/bin/snapcraft-preload ${SNAP}/usr/share/skypeforlinux/skypeforlinux --executed-from="$(pwd)" --pid=$$ $@
+
+exec "$@"
